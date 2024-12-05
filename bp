@@ -1,0 +1,95 @@
+import cv2 as cvt
+import numpy as nu
+import os
+
+
+def eucDistance(vector1, vector2):
+	dist = nu.sqrt(((vector1 - vector2)**2).sum())
+	return dist
+
+
+
+def kNNeighbor(trainingData, testingData, kN=5):
+	distArray = []
+
+	for i in range(trainingData.shape[0]):
+
+		x_i = trainingData[i, :-1]
+		y_i = trainingData[i, -1]
+
+		dist = eucDistance(testingData, x_i)
+		distArray.append([dist, y_i])
+
+
+	k_dist = sorted(distArray, key= lambda x: x[0])[:kN]
+	labelings = nu.array(k_dist)[:, -1]
+	result = nu.unique(labelings, return_counts=True)
+	indexing = nu.argmax(result[1])
+	return result[0][indexing]
+
+wetube = cvt.VideoCapture(0)
+
+
+cascadeEffect = cvt.CascadeClassifier(r"C:\Users\SDKH\Downloads\haarcascade_frontalface_alt.xml")
+feignIgnorance = 0
+someData = []
+theWae = "./data/"	#r"C:\Users\SDKH\Downloads\Project\data"
+
+
+labeling = []
+iD = 0
+individuals = {}
+
+for uix in os.listdir(theWae):
+	if uix.endswith(".npy"):
+		individuals[iD] = uix[:-4]
+		print("Successfully launched" + uix)
+		elementalData = nu.load(theWae+uix)
+
+		someData.append(elementalData)
+		cK = iD*nu.ones((elementalData.shape[0],))
+		iD += 1
+		labeling.append(cK)
+
+dataCollection = nu.concatenate(someData, axis = 0)
+labelingF = nu.concatenate(labeling, axis=0).reshape((-1,1))
+
+print(dataCollection.shape)
+print(labelingF.shape)
+
+trData = nu.concatenate((dataCollection, labelingF),axis=1)
+
+print(trData.shape)
+
+while True:
+	returnedVal, givenFrame = wetube.read()
+	if returnedVal == False:
+		continue
+
+	differentDimensions = cascadeEffect.detectMultiScale(givenFrame, 1.3, 5)
+
+	for strangeDimension in differentDimensions:
+		x1, y1, width, height = strangeDimension
+
+		buffer = 10
+
+		boxOfLines = givenFrame[y1-buffer:y1+height+buffer,x1-buffer:x1+width+buffer]
+		boxOfLines = cvt.resize(boxOfLines, (100,100))
+
+		resultant = kNNeighbor(trData,boxOfLines.flatten())
+
+
+		possibleName = individuals[int(resultant)]
+		cvt.putText(givenFrame, possibleName, (x1,y1-10), cvt.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cvt.LINE_AA)
+		cvt.rectangle(givenFrame, (x1,y1), (x1+width, y1+height), (100,50,244), 2)
+
+	cvt.imshow("Frame by frame", givenFrame)
+
+	passedKey = cvt.waitKey(1) & 0xFF
+
+	if(passedKey == ord("q")):
+		break
+
+wetube.release()
+
+cvt.destroyAllWindows()
