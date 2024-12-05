@@ -1,0 +1,60 @@
+import cv2 as cvt
+import numpy as np
+wetube = cvt.VideoCapture(0)
+
+
+cascadeEffect = cvt.CascadeClassifier(r"C:\Users\SDKH\Downloads\haarcascade_frontalface_alt.xml")
+feignIgnorance = 0
+someData = []
+theWae = "./data/"	#r"C:\Users\SDKH\Downloads\Project\data"
+
+
+newFile = input("Name of individual: ")
+while True:
+
+	returnedVal, givenFrame = wetube.read()
+
+
+	if returnedVal == False:
+		continue
+
+	noirFace = cvt.cvtColor(givenFrame, cvt.COLOR_BGR2GRAY)
+
+
+	boxOfLines = givenFrame[1,1]
+
+	elementalRings = cascadeEffect.detectMultiScale(givenFrame, 1.3, 5)
+	elementalRings = sorted(elementalRings, key = lambda f:f[2]*f[3], reverse=True)
+
+	for ring in elementalRings:
+		x1, y1, width, height = ring
+		cvt.rectangle(givenFrame, (x1, y1), (x1+width, y1 + height), (100,100,100), 2)
+
+		buffer = 10
+		boxOfLines = givenFrame[y1-buffer:y1+height+buffer, x1-buffer:x1+width+buffer]
+		boxOfLines = cvt.resize(boxOfLines, (100, 100))
+
+		feignIgnorance += 1
+		if(feignIgnorance%10 == 0):
+			someData.append(boxOfLines)
+			print(len(someData))
+
+	cvt.imshow("Frame by frame", givenFrame)
+	cvt.imshow("Section on focus", boxOfLines)
+
+	whichKeyPressed = cvt.waitKey(1) & 0xFF
+
+
+	if whichKeyPressed == ord("q"):
+		break
+
+
+someData = np.asarray(someData)
+someData = someData.reshape((someData.shape[0], -1))
+print(someData.shape)
+
+np.save(theWae + newFile + ".npy", someData)
+print("Success of " + theWae + newFile + ".npy")
+
+wetube.release()
+cvt.destroyAllWindows()

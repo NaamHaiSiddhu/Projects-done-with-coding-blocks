@@ -1,0 +1,29 @@
+import cv2 as cvt
+jfad = cvt.VideoCapture(0)
+cascadeEffect = cvt.CascadeClassifier(r"C:\Users\SDKH\Downloads\haarcascade_frontalface_alt.xml")
+
+
+while True:
+	returnedVal, givenFrame = jfad.read()
+	jfadNoir = cvt.cvtColor(givenFrame, cvt.COLOR_BGR2GRAY)
+
+
+	if (returnedVal == False):
+		continue
+
+	elementalRings = cascadeEffect.detectMultiScale(jfadNoir, 1.3, 5)
+
+
+	for (x1, y1, width, height) in elementalRings:
+		cvt.rectangle(givenFrame, (x1,y1), (x1+width, y1+height), (255, 0, 255), 2)
+
+	cvt.imshow("Frame by frame", givenFrame)
+	#cvt.imshow("Frame Noir", jfadNoir)
+
+	keyPressed = cvt.waitKey(1) & 0xFF
+
+	if keyPressed == ord("q"):
+		break
+
+jfad.release()
+cvt.destroyAllWindows()
